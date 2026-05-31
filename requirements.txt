@@ -1,0 +1,12 @@
+pypdf
+chromadb
+ollama
+langchain-core 
+langchain-community
+langchain-chroma
+flask
+flask[async]    #Cuz of tempfile
+
+unstructured
+python-pptx
+markdown
