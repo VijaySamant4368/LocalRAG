@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RAG</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <div class="layout">
-
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-top">
@@ -24,14 +24,22 @@
       <header class="topbar">
         <span class="session-title" id="sessionTitle">—</span>
         <div class="topbar-right">
-          <div class="field-group">
-            <label class="field-label">collection</label>
-            <input class="field-input mono" id="collectionInput" placeholder="chroma" />
+          <div class="field-group tooltip">
+            <label class="field-label">context memory</label>
+            <input type="number" min = "-1" size="1" class="field-input small-field-input mono" id="memoryInput" placeholder="0" />
+            <span class="tooltip-text">How many of the last conversations to give to the AI for context. Set value as -1 for all the previous messages in this session. Important: Having more context may take more time to generate responses.</span>
           </div>
-          <div class="field-group">
+          <div class="field-group tooltip">
+            <label class="field-label">collection</label>
+            <input class="field-input mono" id="collectionInput" placeholder="default-collection" />
+            <span class="tooltip-text">Collection name for the vector DB. Consider it as a folder with different folders having different subjects. You have to give the name for a new folder to create or, if already existing, use.</span>
+          </div>
+          <div class="field-group tooltip">
             <label class="field-label">Model</label>
             <input class="field-input mono" id="modelInput" placeholder="deepseek-r1:1.5b" style="width:160px" />
+            <span class="tooltip-text">The LLM model to answer based on the retrived context. The default model (deepseek-r1:1.5b) is sufficient for the task, however, if you want to use another open source model, you would have to download it. Refer to README.md on how to download models. </span>
           </div>
+
           <button class="btn-save" id="saveConfigBtn">Save</button>
           <div class="divider"></div>
           <button class="btn-ghost" id="clearBtn">Clear</button>
@@ -44,7 +52,6 @@
         </div>
       </div>
 
-      <!-- Input -->
       <div class="input-bar">
         <button class="btn-ask" id="fileBtn" type="file">
           <input type="file" id="fileInput" multiple style="display: none;" />

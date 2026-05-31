@@ -210,6 +210,43 @@ body {
 .field-input:focus { border-color: #aaa; }
 .mono { font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace; }
 
+.small-field-input {
+  width: 70px;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+
+  width: 220px;
+
+  visibility: hidden;
+  opacity: 0;
+
+  background: #222;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  /* white-space: nowrap; */
+
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
 .btn-save {
   height: 28px;
   padding: 0 12px;

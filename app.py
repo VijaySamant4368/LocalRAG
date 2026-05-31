@@ -15,13 +15,18 @@ from utils import get_embedding_function, load_sessions, save_sessions, resolve_
 
 app = Flask(__name__)
 
-PROMPT_TEMPLATE = """Answer the question based only on the following context:
+PROMPT_TEMPLATE = """
 
-{context}
+    CHAT HISTORY:
+    {history}
 
----
+    Answer the question based only on the following context:
 
-Answer the question based on the above context: {question}
+    {context}
+
+    ---
+
+    Answer the question based on the above context: {question}
 """
 
 @app.route("/")
@@ -39,6 +44,7 @@ def create_session():
     session = {
         "id": str(uuid.uuid4()),
         "name": body.get("name", f"Session {len(sessions) + 1}"),
+        "memory": body.get("memory", "0"),
         "collection": body.get("collection", "default-collection"),
         "model": body.get("model", "deepseek-r1:1.5b"),
         "messages": [],
@@ -54,20 +60,18 @@ def update_session(session_id):
     body = request.get_json(silent=True) or {}
     for s in sessions:
         if s["id"] == session_id:
-            for field in ("name", "collection", "model"):
+            for field in ("memory", "name", "collection", "model"):
                 if field in body:
                     s[field] = body[field]
             save_sessions(sessions)
             return jsonify(s)
     return jsonify({"error": "not found"}), 404
 
-
 @app.route("/api/sessions/<session_id>", methods=["DELETE"])
 def delete_session(session_id):
     sessions = [s for s in load_sessions() if s["id"] != session_id]
     save_sessions(sessions)
     return "", 204
-
 
 @app.route("/api/sessions/<session_id>/clear", methods=["POST"])
 def clear_session(session_id):
@@ -86,7 +90,6 @@ def query():
     query_text = request.form.get("query")
     info_content = request.form.get("info_content")
     files = request.files.getlist("files")
-
 
     sessions = load_sessions()
     #short circuits as soon as it finds a match
@@ -131,8 +134,40 @@ def query():
             doc.page_content for doc, _ in results
         )
 
+        memory = int(session.get("memory") or 0)
+        memory_text = None
+        if memory:
+            all_past_messages = session.get("messages")
+            all_roled_messages = [msg for msg in all_past_messages if msg["role"] in ("user", "assistant")]
+            all_valid_messages = []
+            i = len(all_roled_messages) - 1
+            while (i>=0 and len(all_valid_messages) < memory * 2):
+                msg = all_roled_messages[i]
+                prev_msg = all_roled_messages[i - 1]
+                if msg["role"] != "assistant" or prev_msg["role"] != "user":
+                    i-=1
+                else:
+                    #Will reverse the list at last
+                    all_valid_messages.append(msg)
+                    all_valid_messages.append(prev_msg)
+                    i-=2
+            all_valid_messages.reverse()
+
+            memory_text = "\n".join(
+                f"{msg['role']}: {msg['content']}"
+                for msg in all_valid_messages
+            )
+
+        print("============================+=====================")
+        print("memory_text")
+        print(memory_text)
+        print(memory)
+        print(session)
+        print("memory_text")
+        print("============================+=====================")
+
         prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE).format(
-            context=context_text, question=query_text
+            context=context_text, question=query_text, history = memory_text
         )
 
         raw_response = Ollama(model=model_name).invoke(prompt)

@@ -264,7 +264,7 @@ function buildEntry(question, answerMsg) {
     //Already answered
     const textEl = document.createElement("div");
     textEl.className = "a-text";
-    textEl.textContent = answerMsg.content;
+    textEl.innerHTML = marked.parse(answerMsg.content);
     body.appendChild(textEl);
 
     const validSources = (answerMsg.sources || []).filter(Boolean);
@@ -328,11 +328,13 @@ async function renameSession(id) {
 async function saveConfig() {
   const session = getActiveSession();
   if (!session) return;
+  const memory = document.getElementById("memoryInput").value.trim();
+  alert(memory)
   const collection = document.getElementById("collectionInput").value.trim();
   const model = document.getElementById("modelInput").value.trim();
   const updated = await api(`/sessions/${session.id}`, {
     method: "PATCH",
-    body: JSON.stringify({ collection, model }),
+    body: JSON.stringify({ memory, collection, model }),
   });
   Object.assign(session, updated);
 }
